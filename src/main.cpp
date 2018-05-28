@@ -104,13 +104,6 @@ std::vector<int> dijkstra(
 		visited[u - 1]=true;
     }
    
-	// Wyswietlenie najkrotszych odleglosci
-	// od wierzcholka poczatkowego do wszystkich
-	// wierzcholkow w grafie (o ile sa osiagalne) 
-    printf("Vertex   Distance from Source\n");
-    for (int i = 0; i < vertices; ++i)
-        printf("%d \t\t %d\n", i, dist[i]);
-
 	// Uzyskanie wektora bedacego szukana sciezka
 	// na podstawie wektora poprzednikow wierzcholkow	
 	returnPath.push_back(endVertex);
@@ -172,7 +165,8 @@ std::vector<int> bellmanFord(
     int i, j;
      
     // Inicjalizacja wektora odleglosci wartosciami maksymalnymi
-    for (i = 0; i <= vertices; ++i) {
+    for (i = 0; i <= vertices; ++i) 
+	{
         shortestDistances[i].first = INT_MAX;
         shortestDistances[i].second = -1;
     }
@@ -183,16 +177,18 @@ std::vector<int> bellmanFord(
     shortestDistances[startVertex].second = 0;
      
     // Glowne petle algorytmu
-    for (i = 1; i <= vertices - 1; ++i) {    // Runs 'vertices - 1' times = O(|V|)
-        for (j = 1; j <= vertices; ++j) {    // Runs as many times as the edges = O(|E|)
-            // The code ahead basically explores the whole of Adjcency List,
-            // covering one edge once, so the runtime of the code in this 
-            // block is O(|E|)
+    for (i = 1; i <= vertices - 1; ++i) 
+	{
+        for (j = 1; j <= vertices; ++j) 
+	{    
+			// Poniższy kod przeszukuje cala liste sasiedzwa
              
             traverse = adjacencyList[j - 1].begin();
              
-            while (traverse != adjacencyList[j - 1].end()) {
-                if (shortestDistances[j].first == INT_MAX) {
+            while (traverse != adjacencyList[j - 1].end()) 
+			{
+                if (shortestDistances[j].first == INT_MAX) 
+				{
                     // Przypisanie: traverse = traverse->next;
                     ++traverse;
                     continue;
@@ -200,7 +196,8 @@ std::vector<int> bellmanFord(
                  
                 // Sprawdzenie czy jest potrzebna relaksacja
                 if ((*traverse).second + shortestDistances[j].first < 
-                                        shortestDistances[(*traverse).first].first) {
+                                        shortestDistances[(*traverse).first].first) 
+				{
                     // Jezeli tak, to zmieniamy zawartosc wektora z odleglosciami
                     shortestDistances[(*traverse).first].first = (*traverse).second
                                         + shortestDistances[j].first;
@@ -231,6 +228,8 @@ std::vector<int> bellmanFord(
         }
     }
 
+	// Uzyskanie wektora bedacego szukana sciezka
+	// na podstawie wektora poprzednikow wierzcholkow	
 	returnPath.push_back(endVertex);
 	int lastVert = predecessor[endVertex - 1];
 	returnPath.push_back(lastVert);
@@ -245,6 +244,7 @@ std::vector<int> bellmanFord(
      
 }
 
+// Pomocnicza funkcja wyswietlajaca liste sasiedztwa
 void printAdjacency(int vertices, list<pair<int, int>> *table, string str)
 {
 	cout << "\nThe Adjacency List " << str << endl;
@@ -262,7 +262,7 @@ void printAdjacency(int vertices, list<pair<int, int>> *table, string str)
 	}
 }
 
-
+// Pomocnicza funkcja wyswietlajaca sciezke
 void printPath(int vertices, list<int> *table, string str)
 {
 	cout << "\nThe Path " << str << endl;
@@ -280,6 +280,12 @@ void printPath(int vertices, list<int> *table, string str)
 	}
 }
 
+// Glowna funkcja programu
+// argumenty wywolania:
+// - plik z grafem
+// - numer wierzcholka poczatkowego
+// - numer wierzcholka koncowego
+// - zmienna okreslajaca co wyswietlac na standardowe wyjscie
 int main(int argc, char** argv)
 {
     if (argc != 5) 
@@ -302,6 +308,7 @@ int main(int argc, char** argv)
 		vector<int> path1, path2, final_path1, final_path2;
 		bool path_inverted = false;
 		int edge_start, edge_end;
+		chrono::microseconds total_time{};
 		if (file.is_open() == true)
 		{
 			std::cout << "Uzyskano dostep do pliku!" << std::endl;
@@ -316,6 +323,9 @@ int main(int argc, char** argv)
 				table[x-1].push_back(pair<int, int>(y, z));
 			}
 			printAdjacency(vertices, table, "before Dijkstra");
+			
+			auto start_time = std::chrono::high_resolution_clock::now();// rozpoczecie liczenia czasu algorytmu
+			
 			path1 = dijkstra(table, vertices, start, end);
 			edge_start = path1[0];
 			for (int i = 1; (size_t)i < path1.size(); i++)//odwracanie krawędzi
@@ -345,10 +355,8 @@ int main(int argc, char** argv)
 			for (int i = 0; (size_t)(i + 1) < path2.size(); i++)//wczytywanie ścieżki 2 i kasowanie znoszących się krawędzi
 			{
 				erased = false;
-				cout <<"\nfor1\n";
 				for (list<int>::iterator iter = both_paths[path2[i + 1] - 1].begin(); iter != both_paths[path2[i + 1] - 1].end(); iter++)
 				{
-//					cout <<"for2";
 					if ((*iter) == path2[i])
 					{
 						both_paths[path2[i + 1] - 1].erase(iter);
@@ -364,7 +372,7 @@ int main(int argc, char** argv)
 			int final_path1_start = start;
 			int final_path1_end = start;
 			final_path1.push_back(start);
-			while (final_path1_end != end)//extracting path 1
+			while (final_path1_end != end)// ekstrakcja sciezki 1
 			{
 				final_path1.push_back(*(both_paths[final_path1_end - 1].begin()));
 				to_delete = final_path1_end;
@@ -374,19 +382,25 @@ int main(int argc, char** argv)
 			int final_path2_start = start;
 			int final_path2_end = start;
 			final_path2.push_back(start);
-			while (final_path2_end != end)//extracting path 2
+			while (final_path2_end != end)// ekstrakcja sciezki 2
 			{
 				final_path2.push_back(*(both_paths[final_path2_end - 1].begin()));
 				to_delete = final_path2_end;
 				final_path2_end = *(both_paths[final_path2_end - 1].begin());
 				both_paths[to_delete - 1].erase(both_paths[to_delete - 1].begin());
 			}
+
+			// zakonczenie liczenia czasu algorytmu
+			total_time += chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start_time);
+
 			for (vector<int>::const_iterator iter = final_path1.begin(); iter != final_path1.end(); iter++)
 				cout << *iter << ' ';
 			cout << endl;
 			for (vector<int>::const_iterator iter = final_path2.begin(); iter != final_path2.end(); iter++)
 				cout << *iter << ' ';
 			cout << endl;
+
+			std::cout << total_time.count() << std::endl;
 		}
 		else std::cout << "Dostep do pliku zostal zabroniony!" << std::endl;
 		cin.get();
