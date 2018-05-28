@@ -298,12 +298,14 @@ int main(int argc, char** argv)
 		return 1;
 	} else
 	{
+		//parametry programu
 		int start = atoi(argv[2]);
 		int end = atoi(argv[3]);
 		int std_mode = atoi(argv[4]);
-		int vertices = 0;
 		string s = argv[1];
-		ifstream file(s);
+		ifstream file(s); //otwieranie pliku
+		//zmienne pomocnicze
+		int vertices = 0;
 		string line;
 		bool begin_reading = false;
 		int x,y,z;
@@ -313,7 +315,7 @@ int main(int argc, char** argv)
 		bool path_inverted = false;
 		int edge_start, edge_end;
 		chrono::microseconds total_time{};
-		if (file.is_open() == true)
+		if (file.is_open() == true)//sprawdzanie czy plik poprawnie się otworzył
 		{
 			if (std_mode == 2) std::cout << "Uzyskano dostep do pliku!" << std::endl;
 			while (getline(file, line))//pomijanie niepotrzebnych danych i znajdowanie ilości wierzchołków
@@ -321,8 +323,8 @@ int main(int argc, char** argv)
 				if (line == "#") break;
 				vertices++;
 			}
-			table = new list<pair<int, int>> [vertices];
-			while (file >> x >> y >> z)//wczytywanie danych
+			table = new list<pair<int, int>> [vertices];//przydzielanie pamięci tabeli poszczególnych wierzchołków wypełnionej listami par (wierzchołek docelowy,waga) symbolizujących krawędzie skierowane do wybranego wierzchołka o określonej wadze
+			while (file >> x >> y >> z)//wczytywanie danych (krawędzi) do tabeli
 			{
 				table[x-1].push_back(pair<int, int>(y, z));
 			}
@@ -330,17 +332,18 @@ int main(int argc, char** argv)
 			
 			auto start_time = std::chrono::high_resolution_clock::now();// rozpoczecie liczenia czasu algorytmu
 			
-			path1 = dijkstra(table, vertices, start, end);
+			path1 = dijkstra(table, vertices, start, end);//użycie algorytmu Dijkstry do znalezienia ścieżki nr.1 (path1 to wektor kolejnych wierzchołków w ścieżce)
 			edge_start = path1[0];
-			for (int i = 1; (size_t)i < path1.size(); i++)//odwracanie krawędzi
+			for (int i = 1; (size_t)i < path1.size(); i++)//odwracanie krawędzi (iterowanie po krawędziach)
 			{
 				edge_end = path1[i];
-				for (list<pair<int, int>>::iterator iter = table[edge_start-1].begin(); iter != table[edge_start-1].end();)
+				for (list<pair<int, int>>::iterator iter = table[edge_start-1].begin(); iter != table[edge_start-1].end();) //iterowanie w tabeli list po liście krawędzi wychodzących z wierzchołka początkowego szukanej krawędzi
 				{
-					if ((*iter).first == edge_end)
+					if ((*iter).first == edge_end)//po znalezieniu krawędzi wpisanie jej do listy krawędzi wychodzących z wierzchołka końcowego z odwróconą wagą, skierowaną do wierzchołka początkowwego (odwrócenie)
 					{
 						table[edge_end - 1].push_back(pair<int, int>(edge_start, -((*iter).second)));
-						iter = table[edge_start - 1].erase(iter);
+						iter = table[edge_start - 1].erase(iter);//skasowanie oryginalnej krawędzi
+						break;
 					}
 					else
 						iter++;
@@ -348,8 +351,8 @@ int main(int argc, char** argv)
 				edge_start = edge_end;
 			}
 			if (std_mode == 2) printAdjacency(vertices, table, "Macierz sasiedztwa po alg. Dijkstry");
-			path2 = bellmanFord(table, vertices, start, end);
-			both_paths = new list<int>[vertices];
+			path2 = bellmanFord(table, vertices, start, end);//użycie algorytmu Bellmana-Forda do znalezienia ścieżki nr.2, w argumencie podając zmodyfikowaną zgodnie z algorytmem Bhandariego tabelę list (path2 to wektor kolejnych wierzchołków w ścieżce)
+			both_paths = new list<int>[vertices];//w tej tabeli przechowywany będzie graf utworzony z obu ścieżek
 			for (int i = 0; (size_t)(i + 1) < path1.size(); i++)//wczytywanie ścieżki 1
 			{
 				both_paths[path1[i] - 1].push_back(path1[i + 1]);
@@ -397,7 +400,7 @@ int main(int argc, char** argv)
 			// zakonczenie liczenia czasu algorytmu
 			total_time += chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start_time);
 			
-			if (std_mode == 2 || std_mode == 1)
+			if (std_mode == 2 || std_mode == 1)//wypisanie znalezionych ścieżek
 			{
 				for (vector<int>::const_iterator iter = final_path1.begin(); iter != final_path1.end(); iter++)
 					cout << *iter << ' ';
@@ -410,7 +413,7 @@ int main(int argc, char** argv)
 				std::cout << total_time.count() << std::endl;
 		}
 		else std::cout << "Dostep do pliku zostal zabroniony!" << std::endl;
-		cin.get();
+//		cin.get();
 		return 0;
 	}
 }
