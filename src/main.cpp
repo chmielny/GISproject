@@ -247,8 +247,7 @@ std::vector<int> bellmanFord(
 // Pomocnicza funkcja wyswietlajaca liste sasiedztwa
 void printAdjacency(int vertices, list<pair<int, int>> *table, string str)
 {
-	cout << "\nThe Adjacency List " << str << endl;
-	// Printing Adjacency List
+	cout << "\n" << str << endl;
 	for (int i = 0; i < vertices; ++i) {
 		printf("table[%d] ", i + 1);
 		 
@@ -265,8 +264,7 @@ void printAdjacency(int vertices, list<pair<int, int>> *table, string str)
 // Pomocnicza funkcja wyswietlajaca sciezke
 void printPath(int vertices, list<int> *table, string str)
 {
-	cout << "\nThe Path " << str << endl;
-	// Printing Adjacency List
+	cout << "\n" << str << endl;
 	for (int i = 0; i < vertices; ++i) {
 		printf("table[%d] ", i + 1);
 		 
@@ -285,18 +283,24 @@ void printPath(int vertices, list<int> *table, string str)
 // - plik z grafem
 // - numer wierzcholka poczatkowego
 // - numer wierzcholka koncowego
-// - zmienna okreslajaca co wyswietlac na standardowe wyjscie
+// - zmienna okreslajaca co wyswietlac na standardowe wyjscie:
+// 0 - wyswietl tylko czas
+// 1 - wyswietl czas i wynik
+// 2 - wyswietl wszystkie informacje debugowe
 int main(int argc, char** argv)
 {
     if (argc != 5) 
 	{
 		std::cout << "Zla liczba argumentow wywolania." << std::endl;
-		std::cout << "Uzycie: ./gisproject plik_grafu wierzcholek_poczatkowy wierzcholek_koncowy plik wynikowy" << std::endl;
+		std::cout << "Uzycie: ./gisproject plik_grafu wierzcholek_poczatkowy wierzcholek_koncowy opcje_wyswietlania" << std::endl;
+		std::cout << "opcje_wyswietlania: 0 - wyswietl tylko czas w mikrosekundach, 1 - wyswietl czas i wynik" << std::endl;
+		std::cout << "2 - wyswietl czas, wynik i wszystkie informacje debugowe" << std::endl;
 		return 1;
 	} else
 	{
 		int start = atoi(argv[2]);
 		int end = atoi(argv[3]);
+		int std_mode = atoi(argv[4]);
 		int vertices = 0;
 		string s = argv[1];
 		ifstream file(s);
@@ -311,7 +315,7 @@ int main(int argc, char** argv)
 		chrono::microseconds total_time{};
 		if (file.is_open() == true)
 		{
-			std::cout << "Uzyskano dostep do pliku!" << std::endl;
+			if (std_mode == 2) std::cout << "Uzyskano dostep do pliku!" << std::endl;
 			while (getline(file, line))//pomijanie niepotrzebnych danych i znajdowanie ilości wierzchołków
 			{
 				if (line == "#") break;
@@ -322,7 +326,7 @@ int main(int argc, char** argv)
 			{
 				table[x-1].push_back(pair<int, int>(y, z));
 			}
-			printAdjacency(vertices, table, "before Dijkstra");
+			if (std_mode == 2) printAdjacency(vertices, table, "Macierz sasiedztwa z pliku");
 			
 			auto start_time = std::chrono::high_resolution_clock::now();// rozpoczecie liczenia czasu algorytmu
 			
@@ -343,14 +347,14 @@ int main(int argc, char** argv)
 				}
 				edge_start = edge_end;
 			}
-			printAdjacency(vertices, table, "after Dijkstra");
+			if (std_mode == 2) printAdjacency(vertices, table, "Macierz sasiedztwa po alg. Dijkstry");
 			path2 = bellmanFord(table, vertices, start, end);
 			both_paths = new list<int>[vertices];
 			for (int i = 0; (size_t)(i + 1) < path1.size(); i++)//wczytywanie ścieżki 1
 			{
 				both_paths[path1[i] - 1].push_back(path1[i + 1]);
 			}
-			printPath(vertices, both_paths, "pierwsza sciezka");
+			if (std_mode == 2) printPath(vertices, both_paths, "Sciezka z Dijkstry");
 			bool erased;
 			for (int i = 0; (size_t)(i + 1) < path2.size(); i++)//wczytywanie ścieżki 2 i kasowanie znoszących się krawędzi
 			{
@@ -367,7 +371,7 @@ int main(int argc, char** argv)
 				if (erased == false)
 					both_paths[path2[i] - 1].push_back(path2[i + 1]);
 			}
-			printPath(vertices, both_paths, "dwie sciezki");
+			if (std_mode == 2) printPath(vertices, both_paths, "Obie sciezki");
 			int to_delete;
 			int final_path1_start = start;
 			int final_path1_end = start;
@@ -392,15 +396,18 @@ int main(int argc, char** argv)
 
 			// zakonczenie liczenia czasu algorytmu
 			total_time += chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - start_time);
-
-			for (vector<int>::const_iterator iter = final_path1.begin(); iter != final_path1.end(); iter++)
-				cout << *iter << ' ';
-			cout << endl;
-			for (vector<int>::const_iterator iter = final_path2.begin(); iter != final_path2.end(); iter++)
-				cout << *iter << ' ';
-			cout << endl;
-
-			std::cout << total_time.count() << std::endl;
+			
+			if (std_mode == 2 || std_mode == 1)
+			{
+				for (vector<int>::const_iterator iter = final_path1.begin(); iter != final_path1.end(); iter++)
+					cout << *iter << ' ';
+				cout << endl;
+				for (vector<int>::const_iterator iter = final_path2.begin(); iter != final_path2.end(); iter++)
+					cout << *iter << ' ';
+				cout << endl;
+			}
+			if (std_mode == 2 || std_mode == 1 || std_mode == 0)
+				std::cout << total_time.count() << std::endl;
 		}
 		else std::cout << "Dostep do pliku zostal zabroniony!" << std::endl;
 		cin.get();
